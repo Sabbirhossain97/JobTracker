@@ -54,11 +54,16 @@ export default function Layout() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const truncateEmail = (email: string, maxLength: number = 20) => {
+    if (email.length <= maxLength) return email;
+    return email.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 border-r border-gray-200">
-        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 border-r border-gray-200 flex flex-col">
+        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200 flex-shrink-0">
           <NavLink to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <Briefcase className="w-5 h-5 text-white" />
@@ -69,7 +74,7 @@ export default function Layout() {
           </NavLink>
         </div>
         
-        <nav className="mt-8 px-4">
+        <nav className="flex-1 mt-8 px-4 overflow-y-auto">
           <div className="mb-4">
             <NavLink
               to="/"
@@ -93,8 +98,8 @@ export default function Layout() {
                     }`
                   }
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </NavLink>
               </li>
             ))}
@@ -102,32 +107,36 @@ export default function Layout() {
         </nav>
 
         {/* User Menu */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200">
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              className="w-full flex items-center space-x-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                 {getUserInitials()}
               </div>
-              <div className="flex-1 text-left">
-                <div className="font-medium text-gray-900">{getUserDisplayName()}</div>
-                <div className="text-xs text-gray-500">{user?.email}</div>
+              <div className="flex-1 text-left min-w-0">
+                <div className="font-medium text-gray-900 truncate">
+                  {getUserDisplayName()}
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {user?.email ? truncateEmail(user.email) : ''}
+                </div>
               </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
 
             {showUserMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
                     // Add profile navigation here if needed
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 flex-shrink-0" />
                   <span>Profile</span>
                 </button>
                 <button
@@ -135,17 +144,17 @@ export default function Layout() {
                     setShowUserMenu(false);
                     // Add settings navigation here if needed
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-4 h-4 flex-shrink-0" />
                   <span>Settings</span>
                 </button>
                 <hr className="my-2" />
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
                   <span>Sign out</span>
                 </button>
               </div>
