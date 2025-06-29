@@ -85,26 +85,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
         
-        // Check if user is authenticated with timeout
-        const authPromise = supabase.auth.getUser();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), 5000)
-        );
-        
-        const { data: { user } } = await Promise.race([authPromise, timeoutPromise]) as any;
+        // Check if user is authenticated with more graceful error handling
+        let user = null;
+        try {
+          const { data: { user: authUser }, error } = await supabase.auth.getUser();
+          if (error) {
+            console.warn('Auth error (continuing with local data):', error.message);
+          } else {
+            user = authUser;
+          }
+        } catch (authError) {
+          console.warn('Auth connection failed (continuing with local data):', authError);
+        }
         
         if (!mounted) return;
         
         dispatch({ type: 'SET_USER', payload: user });
 
         if (user) {
-          // Load user data from Supabase with timeout
-          await Promise.race([
-            loadUserData(user.id),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Data loading timeout')), 10000)
-            )
-          ]);
+          // Load user data from Supabase with graceful fallback
+          try {
+            await loadUserData(user.id);
+          } catch (dataError) {
+            console.warn('Failed to load user data from Supabase, falling back to local data:', dataError);
+            loadLocalData();
+          }
         } else {
           // Load from localStorage for demo purposes
           loadLocalData();
@@ -141,6 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           await loadUserData(session.user.id);
         } catch (error) {
           console.error('Error loading user data after sign in:', error);
+          loadLocalData();
         } finally {
           if (mounted) {
             dispatch({ type: 'SET_LOADING', payload: false });
@@ -251,6 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_APPLICATIONS', payload: [] });
       dispatch({ type: 'SET_RESUMES', payload: [] });
       dispatch({ type: 'SET_COVER_LETTERS', payload: [] });
+      throw error; // Re-throw to trigger fallback to localStorage
     }
   };
 
